@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Login - Expense Tracker</title>
+  <link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#007bff" />
+
+  <style>
+    :root {
+      --bg-color: #f3f4f6;
+      --text-color: #333;
+      --input-bg: white;
+      --button-bg: #667eea;
+      --button-hover: #5a67d8;
+      --card-bg: white;
+    }
+
+    body.dark {
+      --bg-color: #1e293b;
+      --text-color: #f8fafc;
+      --input-bg: #334155;
+      --button-bg: #4f46e5;
+      --button-hover: #4338ca;
+      --card-bg: #0f172a;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      transition: all 0.4s ease;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      width: 320px;
+      text-align: center;
+      transition: background-color 0.4s ease;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      background-color: var(--input-bg);
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 15px;
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    input:focus {
+      border-color: var(--button-bg);
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      font-size: 16px;
+      background-color: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover:enabled {
+      background-color: var(--button-hover);
+    }
+
+    button:disabled {
+      background-color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    .toggle-text {
+      margin-top: 15px;
+      font-size: 14px;
+    }
+
+    .toggle-text a {
+      color: var(--button-bg);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .google-btn {
+      background-color: white;
+      color: #333;
+      border: 1px solid #ccc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .google-btn img {
+      height: 18px;
+      width: 18px;
+    }
+
+    .toggle-wrapper {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+    }
+
+    .toggle-wrapper label {
+      margin-right: 10px;
+      font-size: 14px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 34px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #4f46e5;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="toggle-wrapper">
+    
+    <label for="themeToggle">🌞</label>
+    <label class="switch">
+      <input type="checkbox" id="themeToggle">
+      <span class="slider"></span>
+    </label>
+  </div>
+  
+
+  <div class="container">
+    <h2 id="formTitle">Login</h2>
+    <input type="email" id="email" placeholder="Email">
+    <div style="position: relative;">
+  <input type="password" id="password" placeholder="Password">
+  <span onclick="togglePassword()" style="
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--text-color);
+    user-select: none;">👁️</span>
+</div>
+
+    <button id="loginBtn" onclick="login()">Login</button>
+    <button id="signupBtn" style="display:none;" onclick="signup()">Sign Up</button>
+    <!-- <button class="google-btn" onclick="googleLogin()">
+      <img src="https://img.icons8.com/color/16/000000/google-logo.png" alt="Google Logo" />
+      Continue with Google
+    </button> -->
+
+    <div class="toggle-text" id="toggleText">
+      Don’t have an account? <a onclick="toggleForm()">Sign Up</a>
+    </div>
+    <div class="toggle-text">
+  <a onclick="forgotPassword()">Forgot Password?</a>
+</div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZLlYfurPYfsJDqAD7Sh-ZwsGvIEmP9zI",
+      authDomain: "expensetracker-fc103.firebaseapp.com",
+      projectId: "expensetracker-fc103",
+      storageBucket: "expensetracker-fc103.appspot.com",
+      messagingSenderId: "564420262395",
+      appId: "1:564420262395:web:36d763a39ac0dbb108b35e"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    let isLogin = true;
+
+    function toggleForm() {
+      const loginBtn = document.getElementById("loginBtn");
+      const signupBtn = document.getElementById("signupBtn");
+      const formTitle = document.getElementById("formTitle");
+      const toggleText = document.getElementById("toggleText");
+
+      isLogin = !isLogin;
+
+      if (isLogin) {
+        formTitle.textContent = "Login";
+        loginBtn.style.display = "inline-block";
+        signupBtn.style.display = "none";
+        toggleText.innerHTML = `Don’t have an account? <a onclick="toggleForm()">Sign Up</a>`;
+      } else {
+        formTitle.textContent = "Sign Up";
+        loginBtn.style.display = "none";
+        signupBtn.style.display = "inline-block";
+        toggleText.innerHTML = `Already have an account? <a onclick="toggleForm()">Login</a>`;
+      }
+    }
+
+    function login() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const loginBtn = document.getElementById("loginBtn");
+
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Loading...";
+
+      auth.signInWithEmailAndPassword(email, password)
+        .then(() => {
+          loginBtn.textContent = "Login";
+          loginBtn.disabled = false;
+          window.location.href = "expense.html";
+        })
+        .catch(error => {
+          alert(error.message);
+          loginBtn.textContent = "Login";
+          loginBtn.disabled = false;
+        });
+    }
+
+    function signup() {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const signupBtn = document.getElementById("signupBtn");
+
+      signupBtn.disabled = true;
+      signupBtn.textContent = "Loading...";
+
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          alert("Signup successful!");
+          signupBtn.textContent = "Sign Up";
+          signupBtn.disabled = false;
+          toggleForm(); // Go back to login after signup
+        })
+        .catch(error => {
+          alert(error.message);
+          signupBtn.textContent = "Sign Up";
+          signupBtn.disabled = false;
+        });
+    }
+    function togglePassword() {
+  const passwordInput = document.getElementById("password");
+  const icon = passwordInput.nextElementSibling;
+
+  if (passwordInput.type === "password") {
+    passwordInput.type = "text";
+    icon.textContent = "🙈"; // Eye-off
+  } else {
+    passwordInput.type = "password";
+    icon.textContent = "👁️"; // Eye
+  }
+}
+
+// Firebase Forgot Password
+function forgotPassword() {
+  const email = document.getElementById("email").value;
+
+  if (!email) {
+    alert("Please enter your email first.");
+    return;
+  }
+
+  auth.sendPasswordResetEmail(email)
+    .then(() => {
+      alert("Password reset email sent. Please check your inbox.");
+    })
+    .catch(error => {
+      alert(error.message);
+    });
+}
+
+
+    // function googleLogin() {
+    //   const provider = new firebase.auth.GoogleAuthProvider();
+    //   auth.signInWithPopup(provider)
+    //     .then(() => {
+    //       window.location.href = "expense.html";
+    //     })
+    //     .catch(error => {
+    //       alert(error.message);
+    //     });
+    // }
+
+ 
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js")
+      .then(reg => console.log("✅ Service Worker registered", reg))
+      .catch(err => console.error("❌ Registration failed", err));
+  }
+
+
+
+    // Theme Toggle
+    const toggle = document.getElementById("themeToggle");
+    toggle.addEventListener("change", () => {
+      document.body.classList.toggle("dark");
+      localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
+    });
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem("theme");
+      if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        toggle.checked = true;
+      }
+    };
+  </script>
+</body>
+</html>

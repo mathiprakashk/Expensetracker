@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Expense Tracker</title>
+  <style>
+    :root {
+      --bg-color: #f3f4f6;
+      --text-color: #333;
+      --input-bg: white;
+      --card-bg: #fff;
+      --button-bg: #007bff;
+      --button-hover: #0056b3;
+      --danger-bg: #dc3545;
+      --danger-hover: #a71d2a;
+      --success-bg: #28a745;
+      --success-hover: #1e7e34;
+    }
+
+    body.dark-mode {
+    --bg-color: #1e293b;
+      --text-color: #f8fafc;
+      --input-bg: #334155;
+      --button-bg: #4f46e5;
+      --button-hover: #4338ca;
+      --card-bg: #0f172a;
+      --danger-bg: #e53935;
+      --danger-hover: #b71c1c;
+      --success-bg: #10b981;
+      --success-hover: #047857;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 20px;
+      transition: background 0.4s ease, color 0.4s ease;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    #user-email {
+      text-align: center;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    .toggle-container {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
+    .toggle-container label {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .toggle-container input[type="checkbox"] {
+      display: none;
+    }
+
+    .toggle-slider {
+      width: 50px;
+      height: 26px;
+      background-color: #ccc;
+      border-radius: 50px;
+      position: relative;
+      transition: background-color 0.3s ease;
+      margin-left: 10px;
+    }
+
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: #4caf50;
+    }
+
+    input:checked + .toggle-slider::before {
+      transform: translateX(24px);
+    }
+
+    form, .table-container, .export-section {
+      margin: 20px auto;
+      width: 90%;
+      max-width: 700px;
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box;
+      transition: background-color 0.4s ease;
+    }
+
+    input[type="number"], input[type="date"] {
+      width: 100%;
+      margin: 8px 0;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    button {
+      padding: 10px 20px;
+      background: var(--button-bg);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      min-width: 700px;
+    }
+
+    th, td {
+      padding: 10px 6px;
+      border: 1px solid #ddd;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    #weekly-summary {
+      text-align: center;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+    #add-btn
+    {
+      display: block;
+      margin: 10px auto;
+      background: var(--button-bg);
+    }
+    #add-btn:hover
+    {
+      background-color: var(--button-hover);
+    }
+
+    #logout-btn {
+      display: block;
+      margin: 10px auto;
+      background: var(--danger-bg);
+    }
+
+    #logout-btn:hover {
+      background-color: var(--danger-hover);
+    }
+
+    .edit-btn, .save-btn, .cancel-btn, .delete-btn {
+      padding: 5px 10px;
+      font-size: 13px;
+      border-radius: 4px;
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .edit-btn {
+      background-color: var(--button-bg);
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background-color: var(--button-hover);
+    }
+
+    .save-btn {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .save-btn:hover {
+      background-color: #1e7e34;
+    }
+
+    .cancel-btn, .delete-btn {
+      background-color: var(--danger-bg);
+      color: white;
+    }
+
+    .cancel-btn:hover, .delete-btn:hover {
+      background-color: var(--danger-hover);
+    }
+
+    .edit-input {
+      width: 80px;
+      padding: 5px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+
+    fieldset {
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 15px;
+    }
+
+    legend {
+      font-weight: bold;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+    .report-section {
+      margin: 30px auto 20px auto;
+      width: 90%;
+      max-width: 700px;
+      background-color: var(--card-bg);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-sizing: border-box;
+      transition: background-color 0.4s ease;
+    }
+    .report-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .report-controls label {
+      margin-right: 6px;
+    }
+    .category-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .category-filter label {
+      font-weight: normal;
+      margin-right: 4px;
+    }
+    #report-chart {
+      margin: 0 auto;
+      max-width: 600px;
+      background: var(--input-bg);
+      border-radius: 10px;
+      padding: 10px 0 0 0;
+    }
+    #category-breakdown-table {
+      margin-top: 18px;
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--input-bg);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    #category-breakdown-table th, #category-breakdown-table td {
+      border: 1px solid #ddd;
+      padding: 8px 6px;
+      text-align: center;
+    }
+    #category-breakdown-table th {
+      background: #f1f5f9;
+    }
+
+    /* Export Section Styles */
+    .export-section {
+      text-align: center;
+    }
+
+    .export-controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .export-controls label {
+      margin-right: 8px;
+    }
+
+    .export-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .export-btn {
+      background: var(--success-bg);
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .export-btn:hover {
+      background: var(--success-hover);
+    }
+
+    .csv-btn {
+      background: #17a2b8;
+    }
+
+    .csv-btn:hover {
+      background: #138496;
+    }
+
+    .pdf-btn {
+      background: #fd7e14;
+    }
+
+    .pdf-btn:hover {
+      background: #e55a00;
+    }
+
+    /* Loading indicator */
+    .loading {
+      display: none;
+      margin: 10px 0;
+      color: var(--text-color);
+      font-style: italic;
+    }
+
+    /* Export format options */
+    .export-format-options {
+      margin: 15px 0;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: var(--input-bg);
+    }
+
+    .export-format-options h4 {
+      margin-top: 0;
+      margin-bottom: 10px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .checkbox-group label {
+      display: flex;
+      align-items: center;
+      margin-right: 0;
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      margin-right: 5px;
+      width: auto;
+    }
+
+    @media (max-width: 768px) {
+      .export-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .export-buttons {
+        flex-direction: column;
+      }
+      
+      .checkbox-group {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="toggle-container">
+    <label>
+      <span>Dark Mode</span>
+      <input type="checkbox" id="mode-toggle">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+
+  <h1>Expense Tracker</h1>
+  <div id="user-email">Loading user info...</div>
+
+  <form id="expense-form">
+    <label>Date:</label>
+    <input type="date" id="date" required />
+
+    <label>Home Based Spent:</label>
+    <input type="number" id="home" placeholder="₹0" />
+
+    <label>Room Rent:</label>
+    <input type="number" id="rent" placeholder="₹0" />
+
+    <fieldset>
+      <legend>Food Expenses</legend>
+
+      <label>Breakfast:</label>
+      <input type="number" id="breakfast" placeholder="₹0" />
+
+      <label>Lunch:</label>
+      <input type="number" id="lunch" placeholder="₹0" />
+
+      <label>Snacks:</label>
+      <input type="number" id="snacks" placeholder="₹0" />
+
+      <label>Tiffen:</label>
+      <input type="number" id="tiffen" placeholder="₹0" />
+    </fieldset>
+
+    <label>Extra:</label>
+    <input type="number" id="extra" placeholder="₹0" />
+
+    <button type="submit" id="add-btn">Add Expense</button>
+  </form>
+
+  <div id="budget-section" style="text-align:center; margin:20px auto; max-width:400px;">
+  <form id="budget-form" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-bottom:10px;">
+    <label for="monthly-budget">Monthly Budget:</label>
+    <input type="number" id="monthly-budget" min="0" style="width:100px;" placeholder="₹0" />
+    <button type="submit" onclick="saveMonthlyBudget()">Set</button>
+  </form>
+</div>
+
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Home</th>
+          <th>Rent</th>
+          <th>Breakfast</th>
+          <th>Lunch</th>
+          <th>Snacks</th>
+          <th>Tiffen</th>
+          <th>Extra</th>
+          <th>Total</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="records"></tbody>
+    </table>
+  </div>
+  
+  <div id="weekly-summary">₹0 spent this month</div>
+  <div id="budget-remaining" style="font-size:1.2em;font-weight:bold;text-align: center;">Remaining: ₹0</div>
+
+   <!-- REPORT SECTION -->
+  <div class="report-section">
+    <h2 style="text-align:center;margin-bottom:12px;">Reports & Charts</h2>
+    <div class="report-controls">
+      <label>
+        From:
+        <input type="date" id="report-from" />
+      </label>
+      <label>
+        To:
+        <input type="date" id="report-to" />
+      </label>
+      <button id="generate-report-btn" type="button">Generate Report</button>
+    </div>
+    <div class="category-filter">
+      <label><input type="checkbox" class="category-checkbox" value="home" checked /> Home</label>
+      <label><input type="checkbox" class="category-checkbox" value="rent" checked /> Rent</label>
+      <label><input type="checkbox" class="category-checkbox" value="breakfast" checked /> Breakfast</label>
+      <label><input type="checkbox" class="category-checkbox" value="lunch" checked /> Lunch</label>
+      <label><input type="checkbox" class="category-checkbox" value="snacks" checked /> Snacks</label>
+      <label><input type="checkbox" class="category-checkbox" value="tiffen" checked /> Tiffen</label>
+      <label><input type="checkbox" class="category-checkbox" value="extra" checked /> Extra</label>
+    </div>
+    <canvas id="report-chart" height="220"></canvas>
+    <table id="category-breakdown-table" style="display:none;">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th>Total Spent (₹)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <!-- DATA EXPORT SECTION -->
+  <div class="export-section">
+    <h2 style="margin-bottom: 15px;">📊 Export Data</h2>
+    
+    <div class="export-controls">
+      <label>
+        Export From:
+        <input type="date" id="export-from" />
+      </label>
+      <label>
+        Export To:
+        <input type="date" id="export-to" />
+      </label>
+    </div>
+
+    <div class="export-format-options">
+      <h4>📋 Select Categories to Export:</h4>
+      <div class="checkbox-group">
+        <label><input type="checkbox" class="export-category-checkbox" value="home" checked /> Home</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="rent" checked /> Rent</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="breakfast" checked /> Breakfast</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="lunch" checked /> Lunch</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="snacks" checked /> Snacks</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="tiffen" checked /> Tiffen</label>
+        <label><input type="checkbox" class="export-category-checkbox" value="extra" checked /> Extra</label>
+      </div>
+    </div>
+
+    <div class="export-buttons">
+      <button id="export-csv-btn" class="export-btn csv-btn">📄 Export as CSV</button>
+      <button id="export-pdf-btn" class="export-btn pdf-btn">📑 Export as PDF</button>
+    </div>
+
+    <div id="export-loading" class="loading">Processing export...</div>
+  </div>
+
+  <button id="logout-btn">Logout</button>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- jsPDF for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBZLlYfurPYfsJDqAD7Sh-ZwsGvIEmP9zI",
+    authDomain: "expensetracker-fc103.firebaseapp.com",
+    projectId: "expensetracker-fc103",
+    storageBucket: "expensetracker-fc103.appspot.com",
+    messagingSenderId: "564420262395",
+    appId: "1:564420262395:web:36d763a39ac0dbb108b35e",
+    measurementId: "G-6SCFVGGPNY"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const form = document.getElementById("expense-form");
+  const recordsTable = document.getElementById("records");
+  const weeklySummary = document.getElementById("weekly-summary");
+  const logoutBtn = document.getElementById("logout-btn");
+  const userEmailDiv = document.getElementById("user-email");
+  const modeToggle = document.getElementById("mode-toggle");
+  const body = document.body;
+
+  let currentUserId = null;
+  let editDocId = null;
+
+  // Theme toggle
+  if (localStorage.getItem("theme") === "dark") {
+    body.classList.add("dark-mode");
+    modeToggle.checked = true;
+  }
+
+  modeToggle.addEventListener("change", () => {
+    body.classList.toggle("dark-mode");
+    localStorage.setItem("theme", body.classList.contains("dark-mode") ? "dark" : "light");
+  });
+
+  // --- BUDGET FEATURE ---
+
+const budgetForm = document.getElementById('budget-form');
+const monthlyBudgetInput = document.getElementById('monthly-budget');
+const budgetRemainingDiv = document.getElementById('budget-remaining');
+
+function getBudgetKey() {
+  // Use year and month to allow per-month budget
+  const now = new Date();
+  return `monthlyBudget-${now.getFullYear()}-${now.getMonth() + 1}`;
+}
+
+function loadBudget() {
+  const key = getBudgetKey();
+  const budget = parseInt(localStorage.getItem(key)) || 0;
+  monthlyBudgetInput.value = budget ? budget : '';
+  updateBudgetRemaining();
+}
+
+budgetForm.onsubmit = function(e) {
+  e.preventDefault();
+  const val = parseInt(monthlyBudgetInput.value) || 0;
+  localStorage.setItem(getBudgetKey(), val);
+  updateBudgetRemaining();
+};
+
+function updateBudgetRemaining() {
+  // Get budget for this month
+  const budget = parseInt(localStorage.getItem(getBudgetKey())) || 0;
+  if (!budget) {
+    budgetRemainingDiv.textContent = "No budget set for this month.";
+    budgetRemainingDiv.style.color = "";
+    return;
+  }
+
+  // Calculate total spent in current month
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  firebase.firestore()
+    .collection("expenses")
+    .doc(currentUserId)
+    .collection("data")
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(firstDay))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(lastDay))
+    .get()
+    .then(snapshot => {
+      let total = 0;
+      snapshot.forEach(doc => {
+        const e = doc.data();
+        total += (e.home || 0) + (e.rent || 0) + (e.breakfast || 0) +
+                 (e.lunch || 0) + (e.snacks || 0) + (e.tiffen || 0) + (e.extra || 0);
+      });
+      const remaining = budget - total;
+      budgetRemainingDiv.textContent = `Remaining: ₹${remaining}`;
+      // Color code
+      const percent = remaining / budget;
+      if (percent > 0.5) {
+        budgetRemainingDiv.style.color = "green";
+      } else if (percent > 0.2) {
+        budgetRemainingDiv.style.color = "orange";
+      } else {
+        budgetRemainingDiv.style.color = "red";
+      }
+    });
+}
+
+// Call updateBudgetRemaining after any expense change
+function reloadAndUpdateBudget() {
+  loadExpenses();
+  updateBudgetRemaining();
+}
+
+// After login, load budget and update
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    currentUserId = user.uid;
+    // ...existing code...
+    loadBudget();
+    // When expenses change, update budget remaining
+    db.collection("expenses").doc(currentUserId).collection("data")
+      .onSnapshot(() => updateBudgetRemaining());
+  }
+});
+
+
+  auth.onAuthStateChanged((user) => {
+    if (user) {
+      currentUserId = user.uid;
+      userEmailDiv.textContent = `Logged in as: ${user.email}`;
+      document.getElementById("date").valueAsDate = new Date();
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        editDocId ? updateExpense(editDocId) : addExpense();
+      });
+
+      logoutBtn.onclick = () => {
+        auth.signOut().then(() => window.location.href = "index.html");
+      };
+
+      loadExpenses();
+      setDefaultReportDates();
+      setDefaultExportDates();
+      attachReportListeners();
+      attachExportListeners();
+    } else {
+      userEmailDiv.textContent = "";
+      window.location.href = "index.html";
+    }
+  });
+
+  function getFormData() {
+    const dateVal = document.getElementById("date").value;
+    if (!dateVal) {
+      alert("Please select a date.");
+      return null;
+    }
+    return {
+      date: firebase.firestore.Timestamp.fromDate(new Date(dateVal)),
+      home: parseInt(document.getElementById("home").value) || 0,
+      rent: parseInt(document.getElementById("rent").value) || 0,
+      breakfast: parseInt(document.getElementById("breakfast").value) || 0,
+      lunch: parseInt(document.getElementById("lunch").value) || 0,
+      snacks: parseInt(document.getElementById("snacks").value) || 0,
+      tiffen: parseInt(document.getElementById("tiffen").value) || 0,
+      extra: parseInt(document.getElementById("extra").value) || 0,
+      created: new Date()
+    };
+  }
+
+  function addExpense() {
+    const expense = getFormData();
+    if (!expense) return;
+
+    db.collection("expenses").doc(currentUserId).collection("data").add(expense)
+      .then(() => {
+        form.reset();
+        document.getElementById("date").valueAsDate = new Date();
+        editDocId = null;
+        form.querySelector('button[type="submit"]').textContent = "Add Expense";
+      })
+      .catch(error => alert("Error adding expense: " + error.message));
+  }
+
+  function updateExpense(docId) {
+    const expense = getFormData();
+    if (!expense) return;
+
+    db.collection("expenses").doc(currentUserId).collection("data").doc(docId).update(expense)
+      .then(() => {
+        form.reset();
+        document.getElementById("date").valueAsDate = new Date();
+        editDocId = null;
+        form.querySelector('button[type="submit"]').textContent = "Add Expense";
+      })
+      .catch(error => alert("Error updating expense: " + error.message));
+  }
+
+  function loadExpenses() {
+    db.collection("expenses").doc(currentUserId).collection("data").orderBy("date")
+      .onSnapshot(snapshot => {
+        recordsTable.innerHTML = "";
+        let weeklyTotal = 0;
+        const now = new Date();
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+
+        snapshot.forEach(doc => {
+          const e = doc.data();
+          const id = doc.id;
+          const date = e.date.toDate();
+          const total = e.home + e.rent + e.breakfast + e.lunch + e.snacks + e.tiffen + e.extra;
+
+          if (date >= weekAgo && date <= now) weeklyTotal += total;
+
+          const row = document.createElement("tr");
+          row.innerHTML = editDocId === id ? getEditRowHTML(e, date) : getViewRowHTML(e, date, total);
+
+          if (editDocId === id) {
+            row.querySelector(".save-btn").onclick = () => saveEdit(id);
+            row.querySelector(".cancel-btn").onclick = () => { editDocId = null; loadExpenses(); };
+          } else {
+            row.querySelector(".edit-btn").onclick = () => { editDocId = id; loadExpenses(); };
+            row.querySelector(".delete-btn").onclick = () => {
+              if (confirm("Are you sure you want to delete this record?")) {
+                db.collection("expenses").doc(currentUserId).collection("data").doc(id).delete()
+                  .catch(error => alert("Error deleting record: " + error.message));
+              }
+            };
+          }
+          recordsTable.appendChild(row);
+        });
+
+        weeklySummary.textContent = `₹${weeklyTotal} spent this month`;
+      }, error => alert("Error loading expenses: " + error.message));
+  }
+
+  function getEditRowHTML(e, date) {
+    return `
+      <td><input type="date" id="edit-date" value="${date.toISOString().split('T')[0]}"></td>
+      <td><input type="number" id="edit-home" value="${e.home}"></td>
+      <td><input type="number" id="edit-rent" value="${e.rent}"></td>
+      <td><input type="number" id="edit-breakfast" value="${e.breakfast}"></td>
+      <td><input type="number" id="edit-lunch" value="${e.lunch}"></td>
+      <td><input type="number" id="edit-snacks" value="${e.snacks}"></td>
+      <td><input type="number" id="edit-tiffen" value="${e.tiffen}"></td>
+      <td><input type="number" id="edit-extra" value="${e.extra}"></td>
+      <td>₹${e.home + e.rent + e.breakfast + e.lunch + e.snacks + e.tiffen + e.extra}</td>
+      <td>
+        <button class="save-btn">Save</button>
+        <button class="cancel-btn">Cancel</button>
+      </td>
+    `;
+  }
+
+  function getViewRowHTML(e, date, total) {
+    return `
+      <td>${date.toISOString().split('T')[0]}</td>
+      <td>₹${e.home}</td>
+      <td>₹${e.rent}</td>
+      <td>₹${e.breakfast}</td>
+      <td>₹${e.lunch}</td>
+      <td>₹${e.snacks}</td>
+      <td>₹${e.tiffen}</td>
+      <td>₹${e.extra}</td>
+      <td>₹${total}</td>
+      <td>
+        <button class="edit-btn">Edit</button>
+        <button class="delete-btn">Delete</button>
+      </td>
+    `;
+  }
+
+  function saveEdit(docId) {
+    const dateVal = document.getElementById("edit-date").value;
+    if (!dateVal) {
+      alert("Please select a date.");
+      return;
+    }
+
+    const updatedExpense = {
+      date: firebase.firestore.Timestamp.fromDate(new Date(dateVal)),
+      home: parseInt(document.getElementById("edit-home").value) || 0,
+      rent: parseInt(document.getElementById("edit-rent").value) || 0,
+      breakfast: parseInt(document.getElementById("edit-breakfast").value) || 0,
+      lunch: parseInt(document.getElementById("edit-lunch").value) || 0,
+      snacks: parseInt(document.getElementById("edit-snacks").value) || 0,
+      tiffen: parseInt(document.getElementById("edit-tiffen").value) || 0,
+      extra: parseInt(document.getElementById("edit-extra").value) || 0,
+      created: new Date()
+    };
+
+    db.collection("expenses").doc(currentUserId).collection("data").doc(docId).update(updatedExpense)
+      .then(() => {
+        editDocId = null;
+        form.reset();
+        document.getElementById("date").valueAsDate = new Date();
+        form.querySelector('button[type="submit"]').textContent = "Add Expense";
+      })
+      .catch(error => alert("Error updating expense: " + error.message));
+  }
+
+  
+// REPORTS & CHART -------------------------------------------------------------
+
+// Set default dates (current month) for the Reports section
+function setDefaultReportDates() {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById("report-from").valueAsDate = firstOfMonth;
+  document.getElementById("report-to").valueAsDate = now;
+}
+
+// Set default dates (current month) for the Export section
+function setDefaultExportDates() {
+  const now = new Date();
+  const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  document.getElementById("export-from").valueAsDate = firstOfMonth;
+  document.getElementById("export-to").valueAsDate = now;
+}
+
+// Helper: Read which categories are checked in a given parent element
+function getCheckedCategories(parentSelector, checkboxClass) {
+  const checkboxes = document.querySelectorAll(`${parentSelector} .${checkboxClass}:checked`);
+  return Array.from(checkboxes).map(cb => cb.value);
+}
+
+// Attach listeners for Reports
+function attachReportListeners() {
+  document.getElementById("generate-report-btn").addEventListener("click", generateReport);
+}
+
+// Attach listeners for Export buttons
+function attachExportListeners() {
+  document.getElementById("export-csv-btn").addEventListener("click", () => handleExport('csv'));
+  document.getElementById("export-pdf-btn").addEventListener("click", () => handleExport('pdf'));
+}
+
+// Generate the chart + table
+let chartInstance = null;
+function generateReport() {
+  const start = document.getElementById("report-from").valueAsDate;
+  const end = document.getElementById("report-to").valueAsDate;
+  if (!start || !end) {
+    alert("Please select a valid date range.");
+    return;
+  }
+  const selectedCats = getCheckedCategories(".report-section", "category-checkbox");
+  if (selectedCats.length === 0) {
+    alert("Select at least one category to include in the report.");
+    return;
+  }
+
+  // Fetch expenses in the date range
+  db.collection("expenses")
+    .doc(currentUserId)
+    .collection("data")
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(start))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(end.getTime() + 86399000))) // include full end day
+    .get()
+    .then(snapshot => {
+      // Accumulate totals
+      const totals = {};
+      selectedCats.forEach(cat => totals[cat] = 0);
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        selectedCats.forEach(cat => {
+          totals[cat] += data[cat] || 0;
+        });
+      });
+
+      // Prepare data for Chart.js
+      const labels = selectedCats.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1));
+      const values = selectedCats.map(cat => totals[cat]);
+
+      // Render chart
+      const ctx = document.getElementById("report-chart").getContext("2d");
+      if (chartInstance) chartInstance.destroy();
+      chartInstance = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            label: "Total Spent (₹)",
+            data: values,
+            borderWidth: 1
+          }]
+        },
+        options: {
+          scales: {
+            y: { beginAtZero: true }
+          },
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // Fill breakdown table
+      const tbody = document.querySelector("#category-breakdown-table tbody");
+      tbody.innerHTML = "";
+      selectedCats.forEach((cat, idx) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${labels[idx]}</td>
+          <td>₹${values[idx]}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById("category-breakdown-table").style.display = "table";
+    })
+    .catch(err => alert("Error generating report: " + err.message));
+}
+
+// ---------------------------------- EXPORT SECTION ---------------------------
+
+// Handles CSV / PDF export
+function handleExport(type) {
+  const start = document.getElementById("export-from").valueAsDate;
+  const end = document.getElementById("export-to").valueAsDate;
+  if (!start || !end) {
+    alert("Please select a valid date range.");
+    return;
+  }
+  const selectedCats = getCheckedCategories(".export-section", "export-category-checkbox");
+  if (selectedCats.length === 0) {
+    alert("Select at least one category to export.");
+    return;
+  }
+
+  document.getElementById("export-loading").style.display = "block";
+  db.collection("expenses")
+    .doc(currentUserId)
+    .collection("data")
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(start))
+    .where("date", "<=", firebase.firestore.Timestamp.fromDate(new Date(end.getTime() + 86399000)))
+    .orderBy("date")
+    .get()
+    .then(snapshot => {
+      const rows = [];
+      snapshot.forEach(doc => {
+        const d = doc.data();
+        const row = { Date: d.date.toDate().toISOString().split("T")[0] };
+        selectedCats.forEach(cat => {
+          row[cat.charAt(0).toUpperCase() + cat.slice(1)] = d[cat] || 0;
+        });
+        rows.push(row);
+      });
+
+      if (type === "csv") exportAsCSV(rows);
+      else if (type === "pdf") exportAsPDF(rows);
+
+      document.getElementById("export-loading").style.display = "none";
+    })
+    .catch(err => {
+      alert("Export error: " + err.message);
+      document.getElementById("export-loading").style.display = "none";
+    });
+}
+
+// Create and download a CSV
+function exportAsCSV(rows) {
+  if (rows.length === 0) {
+    alert("No data found for selected range.");
+    return;
+  }
+  const headers = Object.keys(rows[0]);
+  const csvContent = [
+    headers.join(","),
+    ...rows.map(r => headers.map(h => r[h]).join(","))
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "expenses_report.csv";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+// Create and download a PDF with autoTable
+function exportAsPDF(rows) {
+  if (rows.length === 0) {
+    alert("No data found for selected range.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const headers = [Object.keys(rows[0])];
+  const data = rows.map(r => Object.values(r));
+
+  doc.text("Expense Report", 14, 16);
+  doc.autoTable({
+    head: headers,
+    body: data,
+    startY: 20
+  });
+  doc.save("expenses_report.pdf");
+}
+
+// -----------------------------------------------------------------------------
+// END OF ADDED CODE
+let monthlyBudget = 10000; // Default fallback
+
+// Load saved budget from Firebase
+function loadMonthlyBudget() {
+  db.collection("users").doc(currentUserId).get().then(doc => {
+    if (doc.exists && doc.data().monthlyBudget) {
+      monthlyBudget = doc.data().monthlyBudget;
+      document.getElementById("monthly-budget").value = monthlyBudget;
+    }
+    updateSpendingSummary();
+  }).catch(err => {
+    console.error("Error loading budget:", err.message);
+    updateSpendingSummary(); // fallback
+  });
+}
+
+// Save updated monthly budget to Firebase
+function saveMonthlyBudget() {
+  const inputVal = parseFloat(document.getElementById("monthly-budget").value);
+  if (!isNaN(inputVal) && inputVal > 0) {
+    db.collection("users").doc(currentUserId).set({
+      monthlyBudget: inputVal
+    }, { merge: true }).then(() => {
+      monthlyBudget = inputVal;
+      alert("Budget updated!");
+      updateSpendingSummary();
+    }).catch(err => alert("Error saving budget: " + err.message));
+  } else {
+    alert("Please enter a valid budget.");
+  }
+}
+
+// Update summary UI
+function updateSpendingSummary() {
+  const now = new Date();
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const startOfWeek = new Date(now);
+  startOfWeek.setDate(now.getDate() - now.getDay());
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  db.collection("expenses")
+    .doc(currentUserId)
+    .collection("data")
+    .where("date", ">=", firebase.firestore.Timestamp.fromDate(startOfMonth))
+    .get()
+    .then(snapshot => {
+      let todayTotal = 0;
+      let weekTotal = 0;
+      let monthTotal = 0;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const date = data.date.toDate();
+        let expenseSum = 0;
+        for (const key in data) {
+          if (key !== "date") {
+            expenseSum += parseFloat(data[key]) || 0;
+          }
+        }
+
+        if (date >= startOfMonth) monthTotal += expenseSum;
+        if (date >= startOfWeek) weekTotal += expenseSum;
+        if (date >= startOfToday) todayTotal += expenseSum;
+      });
+
+      const remaining = monthlyBudget - monthTotal;
+
+      document.getElementById("today-spent").innerText = `Today you spent: ₹${todayTotal}`;
+      document.getElementById("week-spent").innerText = `This week you spent: ₹${weekTotal}`;
+      document.getElementById("month-spent").innerText = `This month you spent: ₹${monthTotal}`;
+      document.getElementById("week-total").innerText = `₹${weekTotal} spent this week`;
+      document.getElementById("remaining").innerText = `Remaining: ₹${remaining}`;
+    })
+    .catch(err => {
+      console.error("Error fetching summary:", err.message);
+    });
+}
+
+// Call this after Firebase auth login is successful
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    currentUserId = user.uid;
+    loadMonthlyBudget();
+  }
+});
+
+</script>
+</body>
+</html>
