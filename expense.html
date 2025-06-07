@@ -747,43 +747,45 @@ auth.onAuthStateChanged((user) => {
   }
 
   function loadExpenses() {
-    db.collection("expenses").doc(currentUserId).collection("data").orderBy("date")
-      .onSnapshot(snapshot => {
-        recordsTable.innerHTML = "";
-        let weeklyTotal = 0;
-        const now = new Date();
-        const weekAgo = new Date(now);
-        weekAgo.setDate(now.getDate() - 7);
+  db.collection("expenses").doc(currentUserId).collection("data").orderBy("date")
+    .onSnapshot(snapshot => {
+      recordsTable.innerHTML = "";
+      let monthlyTotal = 0;
+      const now = new Date();
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        snapshot.forEach(doc => {
-          const e = doc.data();
-          const id = doc.id;
-          const date = e.date.toDate();
-          const total = e.home + e.rent + e.breakfast + e.lunch + e.snacks + e.tiffen + e.extra;
+      snapshot.forEach(doc => {
+        const e = doc.data();
+        const id = doc.id;
+        const date = e.date.toDate();
+        const total = e.home + e.rent + e.breakfast + e.lunch + e.snacks + e.tiffen + e.extra;
 
-          if (date >= weekAgo && date <= now) weeklyTotal += total;
+        // ✅ Sum only this month's expenses
+        if (date >= startOfMonth && date <= now) monthlyTotal += total;
 
-          const row = document.createElement("tr");
-          row.innerHTML = editDocId === id ? getEditRowHTML(e, date) : getViewRowHTML(e, date, total);
+        const row = document.createElement("tr");
+        row.innerHTML = editDocId === id ? getEditRowHTML(e, date) : getViewRowHTML(e, date, total);
 
-          if (editDocId === id) {
-            row.querySelector(".save-btn").onclick = () => saveEdit(id);
-            row.querySelector(".cancel-btn").onclick = () => { editDocId = null; loadExpenses(); };
-          } else {
-            row.querySelector(".edit-btn").onclick = () => { editDocId = id; loadExpenses(); };
-            row.querySelector(".delete-btn").onclick = () => {
-              if (confirm("Are you sure you want to delete this record?")) {
-                db.collection("expenses").doc(currentUserId).collection("data").doc(id).delete()
-                  .catch(error => alert("Error deleting record: " + error.message));
-              }
-            };
-          }
-          recordsTable.appendChild(row);
-        });
+        if (editDocId === id) {
+          row.querySelector(".save-btn").onclick = () => saveEdit(id);
+          row.querySelector(".cancel-btn").onclick = () => { editDocId = null; loadExpenses(); };
+        } else {
+          row.querySelector(".edit-btn").onclick = () => { editDocId = id; loadExpenses(); };
+          row.querySelector(".delete-btn").onclick = () => {
+            if (confirm("Are you sure you want to delete this record?")) {
+              db.collection("expenses").doc(currentUserId).collection("data").doc(id).delete()
+                .catch(error => alert("Error deleting record: " + error.message));
+            }
+          };
+        }
+        recordsTable.appendChild(row);
+      });
 
-        weeklySummary.textContent = `₹${weeklyTotal} spent this month`;
-      }, error => alert("Error loading expenses: " + error.message));
-  }
+      // ✅ Show monthly total
+      weeklySummary.textContent = `₹${monthlyTotal} spent this month`;
+    }, error => alert("Error loading expenses: " + error.message));
+}
+
 
   function getEditRowHTML(e, date) {
     return `
