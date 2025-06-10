@@ -950,17 +950,32 @@ function generateReport() {
       });
 
       // Fill breakdown table
-      const tbody = document.querySelector("#category-breakdown-table tbody");
-      tbody.innerHTML = "";
-      selectedCats.forEach((cat, idx) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${labels[idx]}</td>
-          <td>₹${values[idx]}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-      document.getElementById("category-breakdown-table").style.display = "table";
+// Fill breakdown table and compute grand total
+const tbody = document.querySelector("#category-breakdown-table tbody");
+tbody.innerHTML = "";
+
+let grandTotal = 0;
+selectedCats.forEach((cat, idx) => {
+  grandTotal += values[idx];
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${labels[idx]}</td>
+    <td>₹${values[idx]}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+// Add grand total row
+const totalRow = document.createElement("tr");
+totalRow.innerHTML = `
+  <td><strong>Total</strong></td>
+  <td><strong>₹${grandTotal}</strong></td>
+`;
+totalRow.style.borderTop = "2px solid #000";
+tbody.appendChild(totalRow);
+
+document.getElementById("category-breakdown-table").style.display = "table";
+
     })
     .catch(err => alert("Error generating report: " + err.message));
 }
@@ -1089,9 +1104,6 @@ function saveMonthlyBudget() {
 // Update summary UI
 function updateSpendingSummary() {
   const now = new Date();
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
   db.collection("expenses")
@@ -1100,37 +1112,29 @@ function updateSpendingSummary() {
     .where("date", ">=", firebase.firestore.Timestamp.fromDate(startOfMonth))
     .get()
     .then(snapshot => {
-      let todayTotal = 0;
-      let weekTotal = 0;
       let monthTotal = 0;
 
       snapshot.forEach(doc => {
         const data = doc.data();
-        const date = data.date.toDate();
-        let expenseSum = 0;
-        for (const key in data) {
-          if (key !== "date") {
-            expenseSum += parseFloat(data[key]) || 0;
-          }
-        }
-
-        if (date >= startOfMonth) monthTotal += expenseSum;
-        if (date >= startOfWeek) weekTotal += expenseSum;
-        if (date >= startOfToday) todayTotal += expenseSum;
+        let sum = 0;
+        sum += data.home || 0;
+        sum += data.rent || 0;
+        sum += data.breakfast || 0;
+        sum += data.lunch || 0;
+        sum += data.snacks || 0;
+        sum += data.tiffen || 0;
+        sum += data.extra || 0;
+        monthTotal += sum;
       });
 
-      const remaining = monthlyBudget - monthTotal;
-
-      document.getElementById("today-spent").innerText = `Today you spent: ₹${todayTotal}`;
-      document.getElementById("week-spent").innerText = `This week you spent: ₹${weekTotal}`;
-      document.getElementById("month-spent").innerText = `This month you spent: ₹${monthTotal}`;
-      document.getElementById("week-total").innerText = `₹${weekTotal} spent this week`;
-      document.getElementById("remaining").innerText = `Remaining: ₹${remaining}`;
+      document.getElementById("weekly-summary").innerText = `₹${monthTotal} spent this month`;
     })
     .catch(err => {
-      console.error("Error fetching summary:", err.message);
+      console.error("Error calculating monthly total:", err.message);
     });
 }
+
+
 
 // Call this after Firebase auth login is successful
 firebase.auth().onAuthStateChanged(user => {
